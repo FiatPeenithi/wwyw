@@ -1,5 +1,13 @@
 {
   "HomePage": {
-    "title": "Hello world!"
+    "title": "W(h)at Would You Wish?",
+    "subtitle": "Begin your spiritual journey in Chiang Mai",
+    "short": "Discover sacred temples aligned with your wishes",
+    "btn": "Start"
+  },
+  "Category": {
+    "title": "What Would You Wish?",
+    "subtitle": "Select the blessing you seek for your spiritual journey",
+    "btnNext": "Continue"
   }
 }
