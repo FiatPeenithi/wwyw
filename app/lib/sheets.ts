@@ -1,16 +1,31 @@
 // lib/sheets.ts
-// Service Account–only Google Sheets helper
-// tsconfig ต้องมี: "resolveJsonModule": true, "esModuleInterop": true
+// Next.js + Google Sheets (Service Account) แบบไม่ต้อง commit คีย์ขึ้น GitHub
+// ต้องมีใน tsconfig: "resolveJsonModule": true, "esModuleInterop": true (จริงๆ ไฟล์นี้ไม่ใช้ import JSON แล้วก็ได้)
 
 import { google } from "googleapis";
-import keys from "../../spreadsheet-keys.json";
 
-// === Config ===
-const SPREADSHEET_ID = "1Jtyaba7Gse_OBSKroatDxMw6GwqMn3pkPStamNvvEFo" as const;
+// === Config from ENV ===
+// ตั้งใน .env.local (ดูตัวอย่างในไฟล์ .env.example ด้านล่าง)
+const SPREADSHEET_ID = process.env.SHEETS_SPREADSHEET_ID as string;
 
-// All ranges must match the *tab names* in the Google Sheet.
-// If your first row is the header row, use A1:Z for an open-ended range.
-const RANGES = {
+// แนะนำให้ตั้งทั้งสองตัวแปรนี้แทนการ import JSON
+const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL as string;
+const GOOGLE_PRIVATE_KEY = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+const GOOGLE_PRIVATE_KEY_ID = process.env.GOOGLE_PRIVATE_KEY_ID || undefined;
+
+// --- เช็คคอนฟิกพื้นฐาน ---
+function assertEnv() {
+  const missing: string[] = [];
+  if (!SPREADSHEET_ID) missing.push("SHEETS_SPREADSHEET_ID");
+  if (!GOOGLE_CLIENT_EMAIL) missing.push("GOOGLE_CLIENT_EMAIL");
+  if (!GOOGLE_PRIVATE_KEY) missing.push("GOOGLE_PRIVATE_KEY");
+  if (missing.length) {
+    throw new Error(`Missing ENV: ${missing.join(", ")}`);
+  }
+}
+
+// === Ranges (ต้องตรงกับชื่อแท็บใน Google Sheet) ===
+export const RANGES = {
   category: "category!A1:Z",
   temple_th: "temple_th!A1:Z",
   temple_en: "temple_en!A1:Z",
@@ -22,7 +37,7 @@ const RANGES = {
   store_en: "store_en!A1:Z",
 } as const;
 
-// === Types: every field is a string ===
+// === Types ===
 export type Category = {
   id: string;
   category_th: string;
@@ -67,7 +82,7 @@ export type CommunityEN = {
   name_en: string;
   short_en: string;
   history_en: string;
-  hightlight_en: string; // note: spelled as in schema
+  hightlight_en: string; // ตาม schema เดิม
 };
 
 export type SacredTH = {
@@ -121,25 +136,8 @@ export type SheetsPayload = {
   store_en: StoreEN[];
 };
 
-// ————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————
 // Utilities
-
-function normalizePrivateKey(k?: string) {
-  // ถ้าคีย์ใน JSON มี \n เป็นตัวอักษรจริง ให้แปลงเป็น newline
-  return (k || "").replace(/\\n/g, "\n");
-}
-
-function assertServiceAccountJson() {
-  const required = ["client_email", "private_key", "type"];
-  for (const field of required) {
-    if (!(keys as any)[field]) {
-      throw new Error(`Missing '${field}' in spreadsheet-keys.json`);
-    }
-  }
-  if ((keys as any).type !== "service_account") {
-    throw new Error(`'type' must be 'service_account'`);
-  }
-}
 
 function s(v: unknown): string {
   if (v === undefined || v === null) return "";
@@ -159,26 +157,24 @@ function rowsToObjects<T extends Record<string, string>>(rows: any[][]): T[] {
   });
 }
 
-// ————————————————————————————————————————————————————————————————————————
-// Auth & client (ใช้ JWT โดยตรง, ตัด token_url/universe_domain ที่ไม่จำเป็น)
+// —————————————————————————————————————————————————————————————
+// Auth & client (ใช้ JWT)
 
 async function getSheetsClient() {
-  assertServiceAccountJson();
+  assertEnv();
 
   const auth = new google.auth.JWT({
-    email: (keys as any).client_email,
-    key: normalizePrivateKey((keys as any).private_key),
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"], // หรือ readonly ก็ได้
-    keyId: (keys as any).private_key_id, // ไม่จำเป็นแต่ช่วยระบุ key ที่ใช้เซ็น
+    email: GOOGLE_CLIENT_EMAIL,
+    key: GOOGLE_PRIVATE_KEY,
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    keyId: GOOGLE_PRIVATE_KEY_ID,
   });
 
-  // ตรวจว่าเซ็นและแลก token ได้จริง
-  await auth.authorize();
-
+  await auth.authorize(); // ตรวจสอบว่าแลก token ได้จริง
   return google.sheets({ version: "v4", auth });
 }
 
-// ————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————
 // Batch load all tabs defined in RANGES
 
 export async function fetchAllSheets(): Promise<SheetsPayload> {
@@ -207,7 +203,7 @@ export async function fetchAllSheets(): Promise<SheetsPayload> {
   };
 }
 
-// Fetch a single tab by key
+// Fetch single tab
 export async function fetchTab<T extends Record<string, string>>(
   tab: keyof typeof RANGES
 ) {
