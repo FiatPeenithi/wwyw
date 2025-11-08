@@ -8,6 +8,7 @@
   "Category": {
     "title": "What Would You Wish?",
     "subtitle": "Select the blessing you seek for your spiritual journey",
-    "btnNext": "Continue"
+    "btnNext": "Continue",
+    "clearBtn": "Clear"
   }
 }

@@ -189,18 +189,30 @@ export default function CategorySelectPage() {
             })}
           </ul>
 
-          <div className="my-8 flex justify-center">
+          <div className="my-8 flex justify-between gap-4">
+             <button
+    type="button"
+    onClick={() => {
+      setSelectedIds([]);
+      localStorage.removeItem(STORAGE_KEY);
+      setJustSaved(false);
+    }}
+    className="inline-flex items-center justify-center border rounded-lg px-4 py-2 font-medium transition bg-rose-500 text-white hover:bg-rose-400"
+  >
+    {t("clearBtn")}
+  </button>
             <button
               type="button"
               disabled={!canSave}
               onClick={handleSave}
-              className={`inline-flex w-full items-center justify-center rounded-lg px-4 py-2 font-medium transition ${
+              className={`inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium transition ${
                 canSave
                   ? "bg-amber-600 text-white hover:bg-amber-700 cursor-pointer"
                   : "bg-slate-200 text-slate-500 cursor-not-allowed"
               }`}
             >
               {t("btnNext")}
+              
             </button>
           </div>
         </>

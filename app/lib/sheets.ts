@@ -4,10 +4,8 @@
 // Make sure tsconfig.json has: "resolveJsonModule": true, "esModuleInterop": true
 
 import { google } from "googleapis";
-import keys from "../../spreadsheet-keys.json";
-
 // === Config ===
-const SPREADSHEET_ID = "1Jtyaba7Gse_OBSKroatDxMw6GwqMn3pkPStamNvvEFo"; // from your sheet URL
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID; // from your sheet URL
 
 // All ranges must match the *tab names* in the Google Sheet.
 // If your first row is the header row, use A1:Z for an open-ended range.
@@ -126,14 +124,14 @@ export type SheetsPayload = {
 // Auth & client (matches your example pattern 100%)
 async function getSheetsClient() {
   const auth = await google.auth.getClient({
-    projectId: keys.project_id,
+    projectId: process.env.GOOGLE_PROJECT_ID,
     credentials: {
-      type: keys.type as any,
-      private_key: keys.private_key,
-      client_email: keys.client_email,
-      client_id: keys.client_id,
-      token_url: (keys as any).token_uri,
-      universe_domain: (keys as any).universe_domain || "googleapis.com",
+      type: process.env.GOOGLE_TYPE,
+      private_key: process.env.GOOGLE_PRIVATE_KEY,
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      token_url: process.env.GOOGLE_TOKEN_URI,
+      universe_domain: process.env.GOOGLE_UNIVERSE_DOMAIN || "googleapis.com",
     },
     // Using full spreadsheets scope like the example; change to readonly if desired
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
