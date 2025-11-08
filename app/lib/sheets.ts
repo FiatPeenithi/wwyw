@@ -1,11 +1,12 @@
 // lib/sheets.ts
-// Service Account–only Google Sheets helper (no API key fallback)
-// Uses credentials from ./spreadsheet-keys.json exactly like your example.
-// Make sure tsconfig.json has: "resolveJsonModule": true, "esModuleInterop": true
+// Service Account–only Google Sheets helper
+// tsconfig ต้องมี: "resolveJsonModule": true, "esModuleInterop": true
 
 import { google } from "googleapis";
+import keys from "../../spreadsheet-keys.json";
+
 // === Config ===
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID; // from your sheet URL
+const SPREADSHEET_ID = "1Jtyaba7Gse_OBSKroatDxMw6GwqMn3pkPStamNvvEFo" as const;
 
 // All ranges must match the *tab names* in the Google Sheet.
 // If your first row is the header row, use A1:Z for an open-ended range.
@@ -121,23 +122,23 @@ export type SheetsPayload = {
 };
 
 // ————————————————————————————————————————————————————————————————————————
-// Auth & client (matches your example pattern 100%)
-async function getSheetsClient() {
-  const auth = await google.auth.getClient({
-    projectId: process.env.GOOGLE_PROJECT_ID,
-    credentials: {
-      type: process.env.GOOGLE_TYPE,
-      private_key: process.env.GOOGLE_PRIVATE_KEY,
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      token_url: process.env.GOOGLE_TOKEN_URI,
-      universe_domain: process.env.GOOGLE_UNIVERSE_DOMAIN || "googleapis.com",
-    },
-    // Using full spreadsheets scope like the example; change to readonly if desired
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
+// Utilities
 
-  return google.sheets({ version: "v4", auth });
+function normalizePrivateKey(k?: string) {
+  // ถ้าคีย์ใน JSON มี \n เป็นตัวอักษรจริง ให้แปลงเป็น newline
+  return (k || "").replace(/\\n/g, "\n");
+}
+
+function assertServiceAccountJson() {
+  const required = ["client_email", "private_key", "type"];
+  for (const field of required) {
+    if (!(keys as any)[field]) {
+      throw new Error(`Missing '${field}' in spreadsheet-keys.json`);
+    }
+  }
+  if ((keys as any).type !== "service_account") {
+    throw new Error(`'type' must be 'service_account'`);
+  }
 }
 
 function s(v: unknown): string {
@@ -158,7 +159,28 @@ function rowsToObjects<T extends Record<string, string>>(rows: any[][]): T[] {
   });
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// Auth & client (ใช้ JWT โดยตรง, ตัด token_url/universe_domain ที่ไม่จำเป็น)
+
+async function getSheetsClient() {
+  assertServiceAccountJson();
+
+  const auth = new google.auth.JWT({
+    email: (keys as any).client_email,
+    key: normalizePrivateKey((keys as any).private_key),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"], // หรือ readonly ก็ได้
+    keyId: (keys as any).private_key_id, // ไม่จำเป็นแต่ช่วยระบุ key ที่ใช้เซ็น
+  });
+
+  // ตรวจว่าเซ็นและแลก token ได้จริง
+  await auth.authorize();
+
+  return google.sheets({ version: "v4", auth });
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // Batch load all tabs defined in RANGES
+
 export async function fetchAllSheets(): Promise<SheetsPayload> {
   const sheets = await getSheetsClient();
   const { data } = await sheets.spreadsheets.values.batchGet({
@@ -186,7 +208,9 @@ export async function fetchAllSheets(): Promise<SheetsPayload> {
 }
 
 // Fetch a single tab by key
-export async function fetchTab<T extends Record<string, string>>(tab: keyof typeof RANGES) {
+export async function fetchTab<T extends Record<string, string>>(
+  tab: keyof typeof RANGES
+) {
   const sheets = await getSheetsClient();
   const { data } = await sheets.spreadsheets.values.batchGet({
     spreadsheetId: SPREADSHEET_ID,
