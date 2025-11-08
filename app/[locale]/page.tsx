@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { LanguageSwitch } from '../components/language-switch';
 import { usePathname, useRouter } from 'next/navigation';
+import { driveImageUrl } from '../lib/drive-image';
 
 export default function Home() {
   const t = useTranslations('HomePage');
@@ -19,7 +20,7 @@ const router = useRouter();
     <div className="relative min-h-dvh overflow-hidden">
       {/* Background image */}
       <Image
-        src="https://travel.mthai.com/app/uploads/2019/05/1498710820_19818.jpg"
+        src={driveImageUrl("https://drive.google.com/file/d/1XIyRMiN7aXzGyL_hOq3XEdDiyxzqhGEI/view?usp=drive_link")}
         alt="Background"
         fill
         priority
