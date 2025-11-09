@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import MainLayout from "@/app/components/main-layout";
 import { driveImageUrl } from "@/app/lib/drive-image";
 import GridSkeleton from "@/app/components/skeletons/grid-skeleton";
+import { useRouter } from "next/navigation";
 
 // Types (all string fields)
 export type Category = {
@@ -29,6 +30,7 @@ export default function CategorySelectPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [justSaved, setJustSaved] = useState(false);
   const [overLimit, setOverLimit] = useState(false); // ✅ show tailwind-only alert when > 2
+  const router = useRouter();
 
   // Load saved selection from localStorage (if any)
   useEffect(() => {
@@ -104,6 +106,8 @@ export default function CategorySelectPage() {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     setJustSaved(true);
+
+    router.push(`/${locale}/location`)
   };
 
   // ✅ Allow saving when at least 1 and at most 2 selected
@@ -134,8 +138,8 @@ export default function CategorySelectPage() {
 
       {/* Header */}
       <div className="w-full py-6 grid space-y-4 justify-center text-center">
-        <h2 className="text-2xl md:text-4xl font-bold">{t("title")}</h2>
-        <p className="text-sm md:text-lg text-slate-500">{t("subtitle")}</p>
+        <h2 className="text-4xl font-bold">{t("title")}</h2>
+        <p className="text-lg text-slate-500">{t("subtitle")}</p>
       </div>
 
       {/* Mobile-first grid */}

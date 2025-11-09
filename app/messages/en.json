@@ -10,5 +10,27 @@
     "subtitle": "Select the blessing you seek for your spiritual journey",
     "btnNext": "Continue",
     "clearBtn": "Clear"
+  },
+ "Location": {
+    "title": "Choose start location",
+    "subtitle": "Use your current location or drop a pin on the map.",
+    "currentLocation": "Use current location",
+    "pinLocation": "Drop a pin",
+    "gettingLocation": "Fetching your location…",
+    "tapToUseCurrent": "Tap to use the current location and save to your device.",
+    "pinOrSearch": "Open the map to drop a pin or search by place/address, then save.",
+    "noSaved": "No saved start location yet.",
+    "geoNotSupported": "Geolocation is not supported on this browser.",
+    "geoFailed": "Failed to get current location.",
+    "modalTitle": "Drop a pin",
+    "searchPlaceholder": "Search by place or address",
+    "searching": "Searching…",
+    "search": "Search",
+    "noResults": "No results yet. Try searching.",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "startLocation": "Start Location",
+    "calibrate": "Calibrate"
   }
 }
