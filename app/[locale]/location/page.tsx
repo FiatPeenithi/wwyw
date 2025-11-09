@@ -391,7 +391,7 @@ function Page() {
         <div className="p-4 grid bg-white rounded-lg border border-slate-200">
           <p className="text-lg">{t("startLocation")}</p>
           <div className="text-slate-600">
-            <p>{saved?.name || ""}</p>
+            <p>{saved?.name || t("noSetup")}</p>
           </div>
         </div>
 
