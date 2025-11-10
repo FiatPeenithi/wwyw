@@ -145,7 +145,7 @@ export default function CategorySelectPage() {
       {/* Mobile-first grid */}
       {!loading && (
         <>
-          <ul className="grid grid-cols gap-4 md:gap-8 sm:grid-cols-2 md:grid-cols-3">
+          <ul className="grid grid-cols gap-4 md:gap-8 sm:grid-cols-2 md:grid-cols-3 mb-20">
             {data?.map((cat) => {
               const selected = selectedIds.includes(cat.id);
               const label = (cat as any)[nameKey] as string;
@@ -173,7 +173,6 @@ export default function CategorySelectPage() {
                           alt={label}
                           fill
                           className="object-cover rounded-full"
-                          sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 128px"
                         />
                       ) : (
                         <div className="absolute inset-0 grid place-items-center text-slate-400 text-xs">
@@ -193,7 +192,8 @@ export default function CategorySelectPage() {
             })}
           </ul>
 
-          <div className="my-8 flex justify-between gap-4">
+          <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+             <div className="mx-auto max-w-screen-sm px-4 py-3 grid grid-cols-2 gap-3">
              <button
     type="button"
     onClick={() => {
@@ -201,7 +201,7 @@ export default function CategorySelectPage() {
       localStorage.removeItem(STORAGE_KEY);
       setJustSaved(false);
     }}
-    className="inline-flex items-center justify-center border rounded-lg px-4 py-2 font-medium transition bg-rose-500 text-white hover:bg-rose-400"
+    className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50 active:scale-[0.99] transition font-medium"
   >
     {t("clearBtn")}
   </button>
@@ -218,6 +218,7 @@ export default function CategorySelectPage() {
               {t("btnNext")}
               
             </button>
+            </div>
           </div>
         </>
       )}

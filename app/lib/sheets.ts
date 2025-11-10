@@ -35,6 +35,9 @@ export const RANGES = {
   sacred_en: "sacred_en!A1:Z",
   store_th: "store_th!A1:Z",
   store_en: "store_en!A1:Z",
+  trip: "trip!A1:Z",
+  trip_temple: "trip_temple!A1:Z",
+  trip_community: "trip_community!A1:Z",
 } as const;
 
 // === Types ===
@@ -49,6 +52,7 @@ export type TempleTH = {
   id: string;
   name_th: string;
   short_th: string;
+  history_th: string;
   open_at: string;
   close_at: string;
   tel: string;
@@ -59,14 +63,15 @@ export type TempleTH = {
 
 export type TempleEN = {
   id: string;
-  temple_th_id: string;
+  temple_th_id: string; //format => id - name_th
   name_en: string;
   short_en: string;
+  history_en: string;
 };
 
 export type CommunityTH = {
   id: string;
-  temple_id: string;
+  temple_id: string; //format => id - name_th
   name_th: string;
   short_th: string;
   history_th: string;
@@ -78,7 +83,7 @@ export type CommunityTH = {
 
 export type CommunityEN = {
   id: string;
-  community_th_id: string;
+  community_th_id: string; //format => id - name_th
   name_en: string;
   short_en: string;
   history_en: string;
@@ -88,18 +93,18 @@ export type CommunityEN = {
 export type SacredTH = {
   id: string;
   category_id: string;
-  temple_th_id: string;
+  temple_th_id: string; //format => id - name_th
   sorting: string;
   name_th: string;
   prayers_th: string;
   worship_th: string;
-  isHighlight: string;
+  isHighlight: string; // yes/no
   thumbnail: string;
 };
 
 export type SacredEN = {
   id: string;
-  sacred_th_id: string;
+  sacred_th_id: string; //format => id - name_th
   name_en: string;
   prayers_en: string;
   worship_en: string;
@@ -107,7 +112,7 @@ export type SacredEN = {
 
 export type StoreTH = {
   id: string;
-  community_th_id: string;
+  community_th_id: string; //format => id - name_th
   name_th: string;
   short_th: string;
   tel: string;
@@ -119,10 +124,31 @@ export type StoreTH = {
 
 export type StoreEN = {
   id: string;
-  store_th_id: string;
+  store_th_id: string; //format => id - name_th
   name_en: string;
   short_en: string;
 };
+export type Trip = {
+  id: string;
+  name_th: string;
+  name_en: string;
+  short_th: string;
+  short_en: string;
+  category: string; // ex. 1-ความรัก, 2-สุขภาพ รูปแบบคือ id - name_th
+};
+export type TripTemple = {
+  id: string;
+  trip: string; // ex. 1 - Love and Wellness trip
+  temple: string; //format => id - name_th
+  sorting: string; // การเรียงลำดับวัดภายในทริป
+};
+export type TripCommunity = {
+  id: string;
+  trip: string; // ex. 1 - Love and Wellness trip
+  community: string; //format => id - name_th
+  sorting: string; // การเรียงลำดับชุมชนภายในทริป
+};
+
 
 export type SheetsPayload = {
   category: Category[];
@@ -134,6 +160,9 @@ export type SheetsPayload = {
   sacred_en: SacredEN[];
   store_th: StoreTH[];
   store_en: StoreEN[];
+  trip: Trip[];
+  trip_temple: TripTemple[];
+  trip_community: TripCommunity[];
 };
 
 // —————————————————————————————————————————————————————————————
@@ -200,6 +229,9 @@ export async function fetchAllSheets(): Promise<SheetsPayload> {
     sacred_en: rowsToObjects<SacredEN>(map.get("sacred_en")!),
     store_th: rowsToObjects<StoreTH>(map.get("store_th")!),
     store_en: rowsToObjects<StoreEN>(map.get("store_en")!),
+    trip: rowsToObjects<Trip>(map.get("trip")!),
+    trip_temple: rowsToObjects<TripTemple>(map.get("trip_temple")!),
+    trip_community: rowsToObjects<TripCommunity>(map.get("trip_community")!),
   };
 }
 
@@ -225,3 +257,6 @@ export const fetchSacredTH = () => fetchTab<SacredTH>("sacred_th");
 export const fetchSacredEN = () => fetchTab<SacredEN>("sacred_en");
 export const fetchStoresTH = () => fetchTab<StoreTH>("store_th");
 export const fetchStoresEN = () => fetchTab<StoreEN>("store_en");
+export const fetchTrip = () => fetchTab<Trip>("trip");
+export const fetchTripTemple = () => fetchTab<TripTemple>("trip_temple");
+export const fetchTripCommunity = () => fetchTab<TripCommunity>("trip_community");

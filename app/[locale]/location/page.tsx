@@ -2,8 +2,10 @@
 
 import MainLayout from "@/app/components/main-layout"
 import ListSkeleton from "@/app/components/skeletons/list-skeleton"
-import { MapPin, Navigation, X, Search, Crosshair, Loader2 } from "lucide-react";
+import { MapPin, Navigation, X, Search, Crosshair, Loader2, ChevronLeft } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // ---- Utility types ----
@@ -33,8 +35,8 @@ async function ensureLeaflet() {
   // @ts-ignore
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
   })
   return L
 }
@@ -153,10 +155,10 @@ function MapPickerModal({
         const L = leafletRef.current
         circleRef.current = L.circle([lat, lng], {
           radius: Math.max(accuracy, 10),
-          color: '#2563eb',
-          weight: 1,
-          opacity: 0.4,
-          fillOpacity: 0.1,
+          color: '#f59e0b', // amber-500 line
+          weight: 1.5,
+          opacity: 0.7,
+          fillOpacity: 0.12,
         }).addTo(mapRef.current)
         setCalibrating(false)
       },
@@ -181,34 +183,34 @@ function MapPickerModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-[61] md:mx-8 w-full md:h-auto bg-white rounded shadow-2xl border border-slate-200 overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b">
+      <div className="relative z-[61] mx-3 w-full max-w-[720px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b bg-white">
           <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
-            <h3 className="font-semibold">{t('pinLocation')}</h3>
+            <MapPin className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-slate-800">{t('pinLocation')}</h3>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={calibrate}
               disabled={calibrating}
               aria-busy={calibrating}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-sm disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-300"
             >
               {calibrating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crosshair className="w-4 h-4" />}
               {calibrating ? t('gettingLocation') : t('calibrate')}
             </button>
-            <button aria-label={t('close')} onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100">
-              <X className="w-5 h-5" />
+            <button aria-label={t('close')} onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-300">
+              <X className="w-5 h-5 text-slate-600" />
             </button>
           </div>
         </div>
 
-        <div className="relative h-[60vh]">
+        <div className="relative h-[60vh] bg-white">
           {/* map container */}
           <div ref={containerRef} className="absolute inset-0" />
           {/* top-right calibrating badge */}
           {calibrating && (
-            <div className="absolute right-3 top-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg border text-xs flex items-center gap-2 shadow-sm">
+            <div className="absolute right-3 top-3 bg-white/95 backdrop-blur px-3 py-1.5 rounded-full border text-xs flex items-center gap-2 shadow-sm">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>{t('gettingLocation')}</span>
             </div>
@@ -221,9 +223,11 @@ function MapPickerModal({
           )}
         </div>
 
-        <div className="p-4 border-t flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50">{t('cancel')}</button>
-          <button onClick={handleConfirm} className="px-4 py-2 rounded-xl bg-black text-white hover:opacity-90">{t('confirm')}</button>
+        <div className="p-4 border-t flex justify-end gap-2 bg-white">
+          <button onClick={onClose} className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-300">{t('cancel')}</button>
+          <button onClick={handleConfirm} className="px-4 py-2 rounded-xl bg-amber-600 text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-300">
+            {t('confirm')}
+          </button>
         </div>
       </div>
     </div>
@@ -279,14 +283,14 @@ function SearchPlaceModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-[61] md:mx-8 w-full md:max-w-2xl bg-white rounded shadow-2xl border border-slate-200 overflow-hidden">
+      <div className="relative z-[61] mx-3 w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-2">
-            <Search className="w-5 h-5" />
-            <h3 className="font-semibold">{t('search')}</h3>
+            <Search className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-slate-800">{t('search')}</h3>
           </div>
-          <button aria-label={t('close')} onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100">
-            <X className="w-5 h-5" />
+          <button aria-label={t('close')} onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-300">
+            <X className="w-5 h-5 text-slate-600" />
           </button>
         </div>
 
@@ -298,12 +302,12 @@ function SearchPlaceModal({
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && onSearch()}
               placeholder={t('searchPlaceholder')}
-              className="w-full pl-10 pr-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
+              className="w-full pl-10 pr-3 py-3 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-300"
             />
           </div>
           <button
             onClick={onSearch}
-            className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+            className="px-4 py-3 rounded-2xl border border-slate-300 hover:bg-slate-50 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
             disabled={searching}
           >
             {searching ? t('searching') : t('search')}
@@ -316,9 +320,13 @@ function SearchPlaceModal({
           ) : (
             <ul className="divide-y">
               {results.map((r, i) => (
-                <li key={i} className="p-3 hover:bg-slate-50 cursor-pointer" onClick={() => pick(r)}>
-                  <div className="text-sm font-medium">{r.display_name}</div>
-                  <div className="text-xs text-slate-500">{Number(r.lat).toFixed(5)}, {Number(r.lon).toFixed(5)}</div>
+                <li
+                  key={i}
+                  className="p-4 hover:bg-slate-50 cursor-pointer active:bg-slate-100 transition"
+                  onClick={() => pick(r)}
+                >
+                  <div className="text-sm font-medium text-slate-800">{r.display_name}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{Number(r.lat).toFixed(5)}, {Number(r.lon).toFixed(5)}</div>
                 </li>
               ))}
             </ul>
@@ -339,13 +347,14 @@ function Page() {
   const [saved, setSaved] = useState<StoredLocation | null>(null)
   const [geoBusy, setGeoBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
 
   // restore saved on mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) setSaved(JSON.parse(raw))
-    } catch {}
+    } catch { }
   }, [])
 
   // Use current location -> reverse geocode (locale) -> save
@@ -382,70 +391,115 @@ function Page() {
 
   return (
     <MainLayout loading={loading} loadingSlot={<ListSkeleton />}>
-      <div className="grid space-y-8 justify-center">
-        <div className="w-full py-6 grid space-y-4 justify-center text-center">
-          <h2 className="text-5xl font-bold mb-4">{t('title')}</h2>
-          <p className="text-slate-500">{t('subtitle')}</p>
+      {/* Header - mobile first */}
+      <div className="px-4 pt-4 mb-8 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('title')}</h1>
+        <p className="mt-1 text-sm text-slate-500">{t('subtitle')}</p>
+        <button onClick={() => router.push(`/${locale}/category`)} className="bg-slate-100 shadow p-2 mt-4 flex items-center mx-auto text-sm rounded-lg gap-2">
+          <ChevronLeft />
+          {locale === 'en' ? "Select Wish" : "เลือกคำอธษฐาน"}
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 pb-28 grid gap-4">
+        {/* Saved card */}
+        <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <p className="text-sm font-medium text-slate-700">{t("startLocation")}</p>
+          <p className="text-slate-600 mt-1 line-clamp-2">{saved?.name || t("noSetup")}</p>
+
+          {/* meta badges */}
+          {saved && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 text-xs">
+                {saved.source === 'current' ? t('currentLocation') : saved.source === 'pin' ? t('pinLocation') : t('search')}
+              </span>
+              <span className="inline-flex items-center rounded-full bg-slate-50 text-slate-600 border border-slate-200 px-2.5 py-1 text-xs">
+                {new Date(saved.savedAt).toLocaleString()}
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="p-4 grid bg-white rounded-lg border border-slate-200">
-          <p className="text-lg">{t("startLocation")}</p>
-          <div className="text-slate-600">
-            <p>{saved?.name || t("noSetup")}</p>
-          </div>
-        </div>
-
-        {/* Current location card */}
+        {/* Actions - as large tappable cards */}
         <button
           onClick={handleUseCurrent}
-          className="flex gap-4 p-4 bg-white mb-2 rounded-lg border border-slate-200 items-center text-left hover:shadow-sm hover:border-slate-300 transition"
+          className="flex gap-3 p-4 bg-white rounded-2xl border border-slate-200 items-center text-left hover:shadow-sm hover:border-slate-300 active:scale-[0.99] transition"
         >
-          <Navigation />
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-200">
+            {geoBusy ? <Loader2 className="w-5 h-5 animate-spin text-amber-700" /> : <Navigation className="w-5 h-5 text-amber-700" />}
+          </span>
           <div className="flex-1">
-            <p className="font-medium">{t("currentLocation")}</p>
+            <p className="font-medium text-slate-900">{t("currentLocation")}</p>
             <p className="text-xs text-slate-500 mt-1">
               {geoBusy ? t('gettingLocation') : t('tapToUseCurrent')}
             </p>
           </div>
         </button>
 
-        {/* Search place card */}
         <button
           onClick={() => setSearchModalOpen(true)}
-          className="flex gap-4 p-4 bg-white rounded-lg border border-slate-200 items-center text-left hover:shadow-sm hover:border-slate-300 transition"
+          className="flex gap-3 p-4 bg-white rounded-2xl border border-slate-200 items-center text-left hover:shadow-sm hover:border-slate-300 active:scale-[0.99] transition"
         >
-          <Search />
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-200">
+            <Search className="w-5 h-5 text-amber-700" />
+          </span>
           <div className="flex-1">
-            <p className="font-medium">{t("search")}</p>
+            <p className="font-medium text-slate-900">{t("search")}</p>
             <p className="text-xs text-slate-500 mt-1">
               {t('searchPlaceholder')}
             </p>
           </div>
         </button>
 
-        {/* Drop a pin card */}
         <button
           onClick={() => setPinModalOpen(true)}
-          className="flex gap-4 p-4 bg-white rounded-lg border border-slate-200 items-center text-left hover:shadow-sm hover:border-slate-300 transition"
+          className="flex gap-3 p-4 bg-white rounded-2xl border border-slate-200 items-center text-left hover:shadow-sm hover:border-slate-300 active:scale-[0.99] transition"
         >
-          <MapPin />
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-200">
+            <MapPin className="w-5 h-5 text-amber-700" />
+          </span>
           <div className="flex-1">
-            <p className="font-medium">{t("pinLocation")}</p>
+            <p className="font-medium text-slate-900">{t("pinLocation")}</p>
             <p className="text-xs text-slate-500 mt-1">
               {t('pinOrSearch')}
             </p>
           </div>
         </button>
 
-        {/* Saved preview (optional display) */}
-        {/* <div className="text-sm text-slate-500">{prettySaved}</div> */}
-
         {/* Error */}
         {error && (
-          <div className="px-4 py-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">
+          <div className="px-4 py-3 rounded-xl bg-red-50 text-red-700 border border-red-200 text-sm">
             {error}
           </div>
         )}
+      </div>
+
+      {/* Sticky bottom actions */}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+        <div className="mx-auto max-w-screen-sm px-4 py-3 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem(STORAGE_KEY);
+              setSaved(null);
+            }}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50 active:scale-[0.99] transition font-medium"
+          >
+            {t("clearBtn")}
+          </button>
+          <button
+            type="button"
+            disabled={!saved}
+            onClick={() => router.push('/trip')}
+            className={`inline-flex items-center justify-center rounded-xl px-4 py-3 font-semibold active:scale-[0.99] transition focus:outline-none focus:ring-2 focus:ring-amber-300 ${saved
+                ? "bg-amber-600 text-white hover:bg-amber-700"
+                : "bg-slate-200 text-slate-500 cursor-not-allowed"
+              }`}
+          >
+            {t("btnNext")}
+          </button>
+        </div>
       </div>
 
       {/* Modals */}

@@ -1,4 +1,7 @@
 {
+  "Common": {
+    "back": "Back"
+  },
   "HomePage": {
     "title": "W(h)at Would You Wish?",
     "subtitle": "Begin your spiritual journey in Chiang Mai",
@@ -32,6 +35,19 @@
     "close": "Close",
     "startLocation": "Start Location",
     "calibrate": "Calibrate",
-    "noSetup": "No default location set"
+    "noSetup": "No default location set",
+    "clearBtn": "Clear",
+    "btnNext": "Continue",
+    "setting": "Setting"
+  },
+  "Trips": {
+    "title": "Recommended trips",
+    "loading": "Loading trips…",
+    "empty": "No trips match your selected categories yet.",
+    "error": "Something went wrong. Please try again.",
+    "matchedCount": "{count, plural, =0 {No matches} one {# trip found} other {# trips found}}",
+    "matchedBadge": "{count, plural, one {# match} other {# matches}}",
+    "matchedBadgeTitle": "Number of matching categories",
+    "view": "View"
   }
 }
