@@ -38,6 +38,7 @@ export const RANGES = {
   trip: "trip!A1:Z",
   trip_temple: "trip_temple!A1:Z",
   trip_community: "trip_community!A1:Z",
+   reviews: "reviews!A1:Z",
 } as const;
 
 // === Types ===
@@ -59,6 +60,7 @@ export type TempleTH = {
   parking: string;
   maps: string;
   thumbnail: string;
+  album: string;
 };
 
 export type TempleEN = {
@@ -79,6 +81,8 @@ export type CommunityTH = {
   parking: string;
   maps: string;
   thumbnail: string;
+  album: string;
+
 };
 
 export type CommunityEN = {
@@ -163,6 +167,16 @@ export type SheetsPayload = {
   trip: Trip[];
   trip_temple: TripTemple[];
   trip_community: TripCommunity[];
+};
+
+export type Review = {
+  id: string;
+  trip_id: string;
+  name: string;
+  email: string;
+  comment: string;
+  rating: string;      // เก็บเป็น string ตามสไตล์เดิมของ helper
+  created_at: string;  // ISO string
 };
 
 // —————————————————————————————————————————————————————————————
@@ -260,3 +274,57 @@ export const fetchStoresEN = () => fetchTab<StoreEN>("store_en");
 export const fetchTrip = () => fetchTab<Trip>("trip");
 export const fetchTripTemple = () => fetchTab<TripTemple>("trip_temple");
 export const fetchTripCommunity = () => fetchTab<TripCommunity>("trip_community");
+export const fetchReviews = () => fetchTab<Review>("reviews");
+
+// อ่านเฉพาะ trip_id (ไม่มี status filter แล้ว)
+export async function fetchReviewsByTripId(tripId: string) {
+  const all = await fetchReviews();
+  return all.filter(r => r.trip_id === tripId);
+}
+
+
+/* ------------------Create Comment------------------------------ */
+
+async function appendRow(tab: keyof typeof RANGES, values: (string | number)[]) {
+  const sheets = await getSheetsClient();
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SPREADSHEET_ID,
+    range: RANGES[tab],
+    valueInputOption: "USER_ENTERED",
+    requestBody: { values: [values] },
+  });
+}
+
+function genId() {
+  return `${Date.now()}`;
+}
+
+export async function createReview(input: {
+  trip_id: string;
+  name: string;
+  email: string;
+  comment: string;
+  rating: number;
+}) {
+  assertEnv();
+
+  const id = genId();
+  const trip_id = input.trip_id.trim();
+  const name = input.name.trim();
+  const email = input.email.trim();
+  const comment = input.comment.trim();
+  const rating = Math.max(1, Math.min(5, Number(input.rating)));
+  const created_at = new Date().toISOString();
+
+  await appendRow("reviews", [
+    id,
+    trip_id,
+    name,
+    email,
+    comment,
+    String(rating),
+    created_at
+  ]);
+
+  return { id, created_at };
+}

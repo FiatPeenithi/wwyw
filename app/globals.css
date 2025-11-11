@@ -7,3 +7,7 @@ html, body {
 button {
   cursor: pointer;
 }
+
+.embla__prev, .embla__next {
+  display: none;
+}

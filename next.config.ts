@@ -3,9 +3,10 @@ import createNextIntlPlugin from 'next-intl/plugin';
  
 const nextConfig: NextConfig = {
     images: {
-      domains: ['drive.google.com', 'lh3.googleusercontent.com', 'travel.mthai.com'],
+      domains: ['drive.google.com', 'lh3.googleusercontent.com', 'travel.mthai.com', 'drive.usercontent.google.com'],
      remotePatterns: [
        { protocol: 'https', hostname: 'drive.google.com' },
+       { protocol: 'https', hostname: 'drive.usercontent.google.com' },
        { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
        { protocol: 'https', hostname: 'travel.mthai.com' },
      ],

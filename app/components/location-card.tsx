@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { Settings } from "lucide-react";
 
 type StoredLocation = {
   lat: number;
@@ -47,7 +48,7 @@ function LocationCard() {
       className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-slate-800 hover:bg-slate-50 active:scale-[0.99] transition font-medium"
       onClick={() => router.push(`/${locale}/location`)}
       >
-        {t("setting")}
+        <Settings />
       </button>
     </div>
   );

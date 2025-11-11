@@ -3,13 +3,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import MainLayout from "@/app/components/main-layout";
 import GridSkeleton from "@/app/components/skeletons/grid-skeleton";
 import { driveImageUrl } from "@/app/lib/drive-image";
 import Image from "next/image";
 import Link from "next/link";
 import LocationCard from "@/app/components/location-card";
+import { getLocation } from "@/app/lib/storedLocation";
+import { parseLatLngFromGoogleMapsUrl } from "@/app/lib/googleMaps";
+import { navigationUri } from "@/app/lib/mapsNavigation";
+import DriveCarousel from "@/app/components/driveCarousel";
 
 // --- Types ---
 type TempleView = {
@@ -23,6 +27,7 @@ type TempleView = {
   parking: string;
   maps: string;
   thumbnail: string;
+  album: string;
 };
 
 type SacredView = {
@@ -42,7 +47,7 @@ type CommunityView = {
   short?: string;
   history?: string;
   parking?: string;
-  maps?: string;
+  maps: string;
   thumbnail?: string;
   highlight?: string | boolean;
 };
@@ -57,7 +62,7 @@ function useExpandable(initialLines = 3) {
 export default function TempleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const locale = useLocale();
-
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [temple, setTemple] = useState<TempleView | null>(null);
@@ -116,7 +121,8 @@ export default function TempleDetailPage() {
     close: locale === "en" ? "Close" : "ปิด",
     phone: locale === "en" ? "Phone" : "โทร",
     parking: locale === "en" ? "Parking" : "ที่จอดรถ",
-    map: locale === "en" ? "Get Directions" : "เส้นทาง",
+    map: locale === "en" ? "Navigate" : "เริ่มเดินทาง",
+    fromTemp: locale === "en" ? "Navigate from Temple" : "เริ่มเดินทางจากวัด",
     call: locale === "en" ? "Call" : "โทร",
     share: locale === "en" ? "Share" : "แชร์",
     highlight: locale === "en" ? "Highlight" : "ไฮไลท์",
@@ -129,25 +135,9 @@ export default function TempleDetailPage() {
     worship: locale === "en" ? "Worship" : "วิธีบูชา",
     noParking: locale === "en" ? "No" : "ไม่มี",
     haveParking: locale === "en" ? "Yes" : "มี",
+    view: locale === "en" ? "View" : "รายละเอียด",
   } as const;
 
-  const onShare = async () => {
-    if (!temple) return;
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: temple.name,
-          text: temple.short,
-          url: typeof window !== "undefined" ? window.location.href : undefined,
-        });
-      } else {
-        await navigator.clipboard.writeText(
-          typeof window !== "undefined" ? window.location.href : ""
-        );
-        alert(locale === "en" ? "Link copied" : "คัดลอกลิงก์แล้ว");
-      }
-    } catch { }
-  };
 
   if (error) {
     return (
@@ -170,24 +160,16 @@ export default function TempleDetailPage() {
 
         {/* Hero Image */}
         <section className="relative">
-          <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-200 to-slate-300">
-            {temple?.thumbnail ? (
-              <Image
-                src={driveImageUrl(temple.thumbnail)}
-                alt={temple.name}
-                fill
-                sizes="100vw"
-                priority
-                className="object-cover"
-              />
+          <div className="relative w-full aspect-video">
+            {temple?.album ? (
+              <DriveCarousel folder={temple.album} />
             ) : null}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           </div>
 
           {/* Temple Name Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-            <h2 className="text-2xl font-bold drop-shadow-lg mb-1">{temple?.name}</h2>
-            <p className={`leading-relaxed ${lineClamp}`}>
+          <div className="p-4 bg-white mt-4 rounded-xl border border-slate-200">
+            <h2 className="text-xl font-bold drop-shadow-lg mb-1">{temple?.name}</h2>
+            <p className={`leading-relaxed text-slate-500 ${lineClamp}`}>
               {temple?.short}
             </p>
           </div>
@@ -205,7 +187,7 @@ export default function TempleDetailPage() {
           </section>
         )}
         {/* Content Container */}
-        <div className="px-4">
+        <div>
 
           {/* Quick Info Cards */}
           <section className="mt-4 grid grid-cols-2 gap-3">
@@ -282,9 +264,8 @@ export default function TempleDetailPage() {
             ) : (
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
                 {communities.map((c) => (
-                  <Link href={`/${locale}/community/${c.id}`}>
-                    <CommunityCard key={c.id} community={c} t={t} />
-                  </Link>
+
+                  <CommunityCard key={c.id} community={c} t={t} templeMaps={temple?.maps} />
                 ))}
               </div>
             )}
@@ -297,17 +278,23 @@ export default function TempleDetailPage() {
         <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 shadow-lg">
           <div className="px-4 py-3 flex gap-3">
             {temple?.maps && (
-              <a
-                href={temple.maps}
-                target="_blank"
-                rel="noreferrer"
+
+              <button
+                onClick={async () => {
+                  const loc = getLocation();
+                  const r = await fetch(`/api/expand?url=${encodeURIComponent(temple.maps)}`);
+                  const { expanded } = await r.json();
+                  const templeLoc = parseLatLngFromGoogleMapsUrl(expanded);
+                  router.push(navigationUri(loc?.lat, loc?.lng, templeLoc?.lat, templeLoc?.lng))
+                }}
                 className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-medium rounded-xl shadow-md active:scale-95 transition-all"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
                 {t.map}
-              </a>
+              </button>
+
             )}
             {temple?.tel && (
               <a
@@ -321,6 +308,7 @@ export default function TempleDetailPage() {
               </a>
             )}
           </div>
+
         </div>
       )}
     </MainLayout>
@@ -420,13 +408,14 @@ function SacredCard({
   );
 }
 
-function CommunityCard({ community, t }: { community: CommunityView; t: any }) {
+function CommunityCard({ templeMaps, community, t }: { templeMaps?: string; community: CommunityView; t: any }) {
+  const router = useRouter();
   return (
     <div
       className="min-w-[280px] max-w-[280px] snap-center bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200"
     >
       {community.thumbnail && (
-        <div className="relative w-full aspect-[4/3] bg-slate-200">
+        <div className="relative w-full aspect-4/3 bg-slate-200">
           <Image
             src={driveImageUrl(community.thumbnail)}
             alt={community.name}
@@ -440,11 +429,6 @@ function CommunityCard({ community, t }: { community: CommunityView; t: any }) {
       <div className="p-3">
         <div className="flex items-start justify-between gap-2 mb-2">
           <h4 className="font-semibold text-slate-900 leading-tight">{community.name}</h4>
-          {(String(community.highlight) === "1" || community.highlight === true) && (
-            <span className="shrink-0 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-semibold uppercase tracking-wider rounded-full">
-              {t.highlight}
-            </span>
-          )}
         </div>
 
         {community.short && (
@@ -452,6 +436,69 @@ function CommunityCard({ community, t }: { community: CommunityView; t: any }) {
             {community.short}
           </p>
         )}
+
+        <button
+          onClick={async () => {
+            try {
+              const [tRes, cRes] = await Promise.all([
+                fetch(`/api/expand?url=${encodeURIComponent(templeMaps || "")}`),
+                fetch(`/api/expand?url=${encodeURIComponent(community.maps)}`),
+              ]);
+
+              if (!tRes.ok || !cRes.ok) {
+                throw new Error("expand API failed");
+              }
+
+              const tJson = await tRes.json();
+              const cJson = await cRes.json();
+
+              // รองรับหลายชื่อ field จาก API ที่อาจต่างกัน
+              const tempExpanded =
+                tJson.expandedTemp ?? tJson.expanded ?? tJson.expandedUrl ?? tJson.url;
+              const commuExpanded =
+                cJson.expanded ?? cJson.expandedTemp ?? cJson.expandedUrl ?? cJson.url;
+
+              if (!tempExpanded || !commuExpanded) {
+                throw new Error("expanded URL missing");
+              }
+
+              const tempLoc = parseLatLngFromGoogleMapsUrl(String(tempExpanded));
+              const commuLoc = parseLatLngFromGoogleMapsUrl(String(commuExpanded));
+
+              if (!tempLoc || !commuLoc) {
+                throw new Error("cannot parse lat/lng from expanded URL");
+              }
+
+              router.push(
+                navigationUri(tempLoc.lat, tempLoc.lng, commuLoc.lat, commuLoc.lng)
+              );
+            } catch (err) {
+              console.error(err);
+              // จะแจ้งผู้ใช้หรือล็อกอย่างเดียวก็ได้
+              // alert("เกิดข้อผิดพลาดในการสร้างเส้นทาง");
+            }
+          }}
+          className="flex-1 text-xs w-full mb-2 flex items-center justify-center gap-2 py-3 px-2 mt-2 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-medium rounded-lg active:scale-95 transition-all"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+            />
+          </svg>
+          {t.fromTemp}
+        </button>
+
+        <Link
+          href={`/community/${community.id}`}
+          className="flex-1 text-xs flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-medium rounded-lg active:scale-95 transition-all"
+        >
+
+          {t.view}
+        </Link>
+
       </div>
     </div>
   );

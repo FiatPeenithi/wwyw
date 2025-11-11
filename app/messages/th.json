@@ -6,7 +6,8 @@
     "title": "W(h)at Would You Wish?",
     "subtitle": "เริ่มต้นเส้นทางศรัทธาในเชียงใหม่",
     "short": "ค้นหาสิ่งศักดิ์สิทธิ์ที่ตรงกับใจปรารถนา",
-    "btn": "เริ่มต้น"
+    "btn": "เริ่มต้น",
+    "install": "ติดตั้ง"
   },
   "Category": {
     "title": "คุณปรารถนาสิ่งใด?",
@@ -46,8 +47,8 @@
     "empty": "ยังไม่มีทริปที่ตรงกับหมวดที่เลือก",
     "error": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
     "matchedCount": "{count, plural, =0 {ไม่มีที่ตรงกัน} one {พบ # ทริป} other {พบ # ทริป}}",
-    "matchedBadge": "{count, plural, one {ตรงกัน # หมวด} other {ตรงกัน # หมวด}}",
+    "matchBadge": "{count, plural, one {ตรงกัน # หมวด} other {ตรงกัน # หมวด}}",
     "matchedBadgeTitle": "จำนวนหมวดหมู่ที่ตรงกัน",
-    "view": "ดูทริป"
+    "viewDetails": "ดูทริป"
   }
 }

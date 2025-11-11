@@ -397,7 +397,7 @@ function Page() {
         <p className="mt-1 text-sm text-slate-500">{t('subtitle')}</p>
         <button onClick={() => router.push(`/${locale}/category`)} className="bg-slate-100 shadow p-2 mt-4 flex items-center mx-auto text-sm rounded-lg gap-2">
           <ChevronLeft />
-          {locale === 'en' ? "Select Wish" : "เลือกคำอธษฐาน"}
+          {locale === 'en' ? "Select Wish" : "เลือกคำอธิษฐาน"}
         </button>
       </div>
 

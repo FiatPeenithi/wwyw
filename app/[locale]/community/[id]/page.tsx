@@ -9,6 +9,10 @@ import GridSkeleton from "@/app/components/skeletons/grid-skeleton";
 import { driveImageUrl } from "@/app/lib/drive-image";
 import Image from "next/image";
 import LocationCard from "@/app/components/location-card";
+import { getLocation } from "@/app/lib/storedLocation";
+import { parseLatLngFromGoogleMapsUrl } from "@/app/lib/googleMaps";
+import { navigationUri } from "@/app/lib/mapsNavigation";
+import DriveCarousel from "@/app/components/driveCarousel";
 
 type CommunityView = {
   id: string;
@@ -16,8 +20,10 @@ type CommunityView = {
   short?: string;
   history?: string;
   parking?: boolean | string;
-  maps?: string;
+  maps: string;
   thumbnail?: string;
+  album: string;
+  highlight: string;
 };
 
 type RelatedTemple = {
@@ -58,11 +64,11 @@ export default function CommunityDetailPage() {
     [locale]
   );
   const storesTitle = useMemo(
-    () => (locale === "en" ? "Related Stores" : "ร้านค้าที่เกี่ยวข้อง"),
+    () => (locale === "en" ? "Stores" : "ร้านค้าในชุมชน"),
     [locale]
   );
   const relatedTempleLabel = useMemo(
-    () => (locale === "en" ? "Related Temple" : "วัดที่เกี่ยวข้อง"),
+    () => (locale === "en" ? "Nearly Temple" : "วัดใกล้เคียง"),
     [locale]
   );
 
@@ -76,10 +82,11 @@ export default function CommunityDetailPage() {
     close: locale === "en" ? "Close" : "ปิด",
     call: locale === "en" ? "Call" : "โทร",
     share: locale === "en" ? "Share" : "แชร์",
-    direction: locale === "en" ? "Get Directions" : "เส้นทาง",
+    direction: locale === "en" ? "Navigate" : "เริ่มเดินทาง",
     noStores: locale === "en" ? "No stores." : "ไม่มีข้อมูลร้านค้า",
     readMore: locale === "en" ? "Read more" : "อ่านเพิ่มเติม",
     readLess: locale === "en" ? "Show less" : "ย่อ",
+    highlight: locale === "en" ? "Highlight Experiences" : "สิ่งที่น่าที่น่าสนใจ",
   } as const;
 
   useEffect(() => {
@@ -126,7 +133,7 @@ export default function CommunityDetailPage() {
         );
         alert(locale === "en" ? "Link copied" : "คัดลอกลิงก์แล้ว");
       }
-    } catch {}
+    } catch { }
   };
 
   if (error) {
@@ -145,35 +152,27 @@ export default function CommunityDetailPage() {
         {/* Sticky Header */}
         <header>
           <LocationCard />
-          
+
         </header>
 
         {/* Hero */}
         <section className="relative">
-          <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-200 to-slate-300">
-            {community?.thumbnail ? (
-              <Image
-                src={driveImageUrl(community.thumbnail)}
-                alt={community?.name || ""}
-                fill
-                sizes="100vw"
-                priority
-                className="object-cover"
-              />
+          <div className="relative w-full aspect-video">
+            {community?.album ? (
+              <DriveCarousel folder={community.album} />
             ) : null}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-            <h2 className="text-2xl font-bold drop-shadow-lg mb-1">{community?.name}</h2>
-            {community?.short ? (
-              <p className="leading-relaxed line-clamp-3">{community.short}</p>
-            ) : null}
+           <div className="p-4 bg-white mt-4 rounded-xl border border-slate-200">
+            <h2 className="text-xl font-bold drop-shadow-lg mb-1">{community?.name}</h2>
+            <p className={`leading-relaxed text-slate-500 `}>
+              {community?.short}
+            </p>
           </div>
         </section>
 
         {/* Content */}
-        <div className="px-4">
+        <div>
           {/* History */}
           {community?.history && (
             <section className="mt-4 bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
@@ -185,6 +184,20 @@ export default function CommunityDetailPage() {
               </div>
               <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
                 {community.history}
+              </p>
+            </section>
+          )}
+          {/* Highlight */}
+          {community?.highlight && (
+            <section className="mt-4 bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-5 bg-amber-500 rounded-full" />
+                <h3 className="text-base font-semibold text-slate-900">
+                  {t.highlight}
+                </h3>
+              </div>
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                {community.highlight}
               </p>
             </section>
           )}
@@ -244,17 +257,21 @@ export default function CommunityDetailPage() {
       {community?.maps && (
         <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 shadow-lg">
           <div className="px-4 py-3 flex gap-3">
-            <a
-              href={community.maps}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={async () => {
+                const loc = getLocation();
+                const r = await fetch(`/api/expand?url=${encodeURIComponent(community.maps)}`);
+                const { expanded } = await r.json();
+                const commuLoc = parseLatLngFromGoogleMapsUrl(expanded);
+                router.push(navigationUri(loc?.lat, loc?.lng, commuLoc?.lat, commuLoc?.lng))
+              }}
               className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-medium rounded-xl shadow-md active:scale-95 transition-all"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
               {t.direction}
-            </a>
+            </button>
           </div>
         </div>
       )}

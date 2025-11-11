@@ -184,6 +184,7 @@ export async function GET(
       parking: toBool(th.parking),
       maps: th.maps,
       thumbnail: th.thumbnail,
+      album: th.album
     };
 
     return NextResponse.json(

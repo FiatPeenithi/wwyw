@@ -2,6 +2,7 @@ import { useLocale } from "next-intl";
 import { LanguageSwitch } from "../components/language-switch";
 import { usePathname, useRouter } from "next/navigation";
 import { BackButton } from "./back-btn";
+import Link from "next/link";
 
 function NavBar() {
     const router = useRouter();
@@ -17,9 +18,9 @@ function NavBar() {
             <div>
                 <BackButton />
             </div>
-            <div>
-                <h1 className="text-3xl font-bold text-slate-100">W(h)at</h1>
-            </div>
+            <Link href="/">
+                <h1 className="text-2xl font-bold text-slate-100">W(h)at</h1>
+            </Link>
             <LanguageSwitch locale={locale} onLanguageChange={onLanguageChange} />
         </div>
     )

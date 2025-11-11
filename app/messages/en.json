@@ -6,7 +6,8 @@
     "title": "W(h)at Would You Wish?",
     "subtitle": "Begin your spiritual journey in Chiang Mai",
     "short": "Discover sacred temples aligned with your wishes",
-    "btn": "Start"
+    "btn": "Start",
+    "install": "Install"
   },
   "Category": {
     "title": "What Would You Wish?",
@@ -46,8 +47,8 @@
     "empty": "No trips match your selected categories yet.",
     "error": "Something went wrong. Please try again.",
     "matchedCount": "{count, plural, =0 {No matches} one {# trip found} other {# trips found}}",
-    "matchedBadge": "{count, plural, one {# match} other {# matches}}",
+    "matchBadge": "{count, plural, one {# match} other {# matches}}",
     "matchedBadgeTitle": "Number of matching categories",
-    "view": "View"
+    "viewDetails": "View"
   }
 }

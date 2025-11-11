@@ -5,17 +5,21 @@ import { useTranslations, useLocale } from 'next-intl';
 import { LanguageSwitch } from '../components/language-switch';
 import { usePathname, useRouter } from 'next/navigation';
 import { driveImageUrl } from '../lib/drive-image';
+import dynamic from 'next/dynamic';
+const InstallPWA = dynamic(() => import('../components/InstallPWA'), { ssr: false });
 
 export default function Home() {
   const t = useTranslations('HomePage');
-const router = useRouter();
-    const pathname = usePathname();
-    const locale = useLocale();
-    const onLanguageChange = (checked: boolean) => {
-        const newLocale = checked ? 'th' : 'en';
-        const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
-        router.push(newPath);
-    };
+  const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
+
+  const onLanguageChange = (checked: boolean) => {
+    const newLocale = checked ? 'th' : 'en';
+    const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
+    router.push(newPath);
+  };
+
   return (
     <div className="relative min-h-dvh overflow-hidden">
       {/* Background image */}
@@ -51,7 +55,6 @@ const router = useRouter();
           <p className="mt-2 text-lg sm:text-xl text-white/80 drop-shadow">
             {t('short')}
           </p>
-
           <button
             className="mt-8 inline-flex items-center rounded-lg bg-amber-500 px-6 py-3 text-lg text-white font-semibold shadow hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-400"
             aria-label={t('btn')}
@@ -59,6 +62,9 @@ const router = useRouter();
           >
             {t('btn')}
           </button>
+          <div>
+            <InstallPWA label={t('install', { default: 'ติดตั้งแอป' })} />
+          </div>
         </div>
       </main>
     </div>

@@ -12,16 +12,14 @@ function ListItem({ name, short, thumbnail }: Props) {
   return (
     <div
       className="
-        flex items-center gap-3 sm:gap-4
+        flex items-center gap-8
         p-3 sm:p-4
-        rounded-2xl border border-slate-200
         bg-white
-        shadow-none hover:shadow-md transition-shadow
       "
       aria-label={name}
     >
       {/* Avatar wrapper (mobile-first sizes) */}
-      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-zinc-100 shrink-0">
+      <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-zinc-100 shrink-0">
         <Image
           src={driveImageUrl(thumbnail, { useThumbnail: true, size: 'w512' })}
           alt={name}
@@ -34,7 +32,7 @@ function ListItem({ name, short, thumbnail }: Props) {
 
       {/* Texts (truncate nicely on small screens) */}
       <div className="min-w-0 flex-1">
-        <p className="text-base sm:text-lg font-medium">
+        <p className="text-lg font-medium">
           {name}
         </p>
         <p className="mt-0.5 text-sm sm:text-base text-zinc-600 line-clamp-2 sm:line-clamp-1">

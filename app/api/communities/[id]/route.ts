@@ -106,9 +106,11 @@ export async function GET(
       name: locale === "en" ? cen?.name_en || cth.name_th : cth.name_th,
       short: locale === "en" ? cen?.short_en || cth.short_th : cth.short_th,
       history: locale === "en" ? cen?.history_en || cth.history_th : cth.history_th,
+      highlight: locale === "en" ? cen?.hightlight_en || cth.highlight_th : cth.highlight_th,
       thumbnail: cth.thumbnail,
       parking: toBool(cth.parking),
       maps: cth.maps, // ยังส่งใน payload (ไว้ใช้ปุ่มด้านล่าง เหมือน temple page)
+      album: cth.album
     };
 
     // payload: temple ที่เกี่ยวข้อง (ชื่อเท่านั้นก็พอสำหรับหน้าเพจ)
