@@ -1,5 +1,5 @@
 {
-    "Common": {
+  "Common": {
     "back": "กลับ"
   },
   "HomePage": {
@@ -15,7 +15,7 @@
     "btnNext": "ดำเนินการต่อ",
     "clearBtn": "เคลียร์ตัวเลือก"
   },
-   "Location": {
+  "Location": {
     "title": "เลือกจุดเริ่มต้น",
     "subtitle": "ใช้ตำแหน่งปัจจุบันหรือปักหมุดบนแผนที่",
     "currentLocation": "ใช้ตำแหน่งปัจจุบัน",
@@ -49,6 +49,7 @@
     "matchedCount": "{count, plural, =0 {ไม่มีที่ตรงกัน} one {พบ # ทริป} other {พบ # ทริป}}",
     "matchBadge": "{count, plural, one {ตรงกัน # หมวด} other {ตรงกัน # หมวด}}",
     "matchedBadgeTitle": "จำนวนหมวดหมู่ที่ตรงกัน",
-    "viewDetails": "ดูทริป"
+    "viewDetails": "ดูทริป",
+    "retry": "ลองใหม่"
   }
 }

@@ -14,6 +14,7 @@ import { getLocation } from "@/app/lib/storedLocation";
 import { parseLatLngFromGoogleMapsUrl } from "@/app/lib/googleMaps";
 import { navigationUri } from "@/app/lib/mapsNavigation";
 import DriveCarousel from "@/app/components/driveCarousel";
+import ExpandableText from "@/app/components/expandable-text";
 
 // --- Types ---
 type TempleView = {
@@ -53,11 +54,7 @@ type CommunityView = {
 };
 
 // --- Helpers ---
-function useExpandable(initialLines = 3) {
-  const [expanded, setExpanded] = useState(false);
-  const lineClamp = expanded ? "" : `line-clamp-${initialLines}`;
-  return { expanded, setExpanded, lineClamp } as const;
-}
+
 
 export default function TempleDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -113,7 +110,7 @@ export default function TempleDetailPage() {
     [locale]
   );
 
-  const { expanded, setExpanded, lineClamp } = useExpandable(3);
+
 
   // --- UI strings ---
   const t = {
@@ -169,9 +166,11 @@ export default function TempleDetailPage() {
           {/* Temple Name Overlay */}
           <div className="p-4 bg-white mt-4 rounded-xl border border-slate-200">
             <h2 className="text-xl font-bold drop-shadow-lg mb-1">{temple?.name}</h2>
-            <p className={`leading-relaxed text-slate-500 ${lineClamp}`}>
-              {temple?.short}
-            </p>
+            {temple?.short && (
+              <ExpandableText className="text-slate-500">
+                {temple?.short}
+              </ExpandableText>
+            )}
           </div>
         </section>
 
@@ -181,9 +180,9 @@ export default function TempleDetailPage() {
               <div className="w-1 h-5 bg-amber-500 rounded-full" />
               <h3 className="text-base font-semibold text-slate-900">{t.history}</h3>
             </div>
-            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+            <ExpandableText className="text-sm">
               {temple.history}
-            </p>
+            </ExpandableText>
           </section>
         )}
         {/* Content Container */}
@@ -244,7 +243,7 @@ export default function TempleDetailPage() {
             ) : (
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
                 {sacreds.map((s) => (
-                  <SacredCard key={s.id} sacred={s} locale={locale} t={t} />
+                  <SacredCard key={s.id} sacred={s} locale={locale} t={t} onClick={() => router.push(`/sacred/${s.id}`)} />
                 ))}
               </div>
             )}
@@ -353,15 +352,20 @@ function SacredCard({
   sacred,
   locale,
   t,
+  onClick,
 }: {
   sacred: SacredView;
   locale: string;
   t: any;
+  onClick: () => void;
 }) {
   return (
-    <div className="min-w-[280px] max-w-[280px] snap-center bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+    <div
+      onClick={onClick}
+      className="min-w-[280px] max-w-[280px] snap-center bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 cursor-pointer active:scale-[0.98] transition-transform"
+    >
       {sacred.thumbnail && (
-        <div className="relative w-full aspect-[4/3] bg-slate-200">
+        <div className="relative w-full aspect-4/3 bg-slate-200">
           <Image
             src={driveImageUrl(sacred.thumbnail)}
             alt={sacred.name}

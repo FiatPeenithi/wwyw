@@ -15,7 +15,7 @@
     "btnNext": "Continue",
     "clearBtn": "Clear"
   },
- "Location": {
+  "Location": {
     "title": "Choose start location",
     "subtitle": "Use your current location or drop a pin on the map.",
     "currentLocation": "Use current location",
@@ -49,6 +49,7 @@
     "matchedCount": "{count, plural, =0 {No matches} one {# trip found} other {# trips found}}",
     "matchBadge": "{count, plural, one {# match} other {# matches}}",
     "matchedBadgeTitle": "Number of matching categories",
-    "viewDetails": "View"
+    "viewDetails": "View",
+    "retry": "Retry"
   }
 }

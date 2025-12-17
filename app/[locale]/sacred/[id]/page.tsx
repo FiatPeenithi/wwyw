@@ -9,38 +9,37 @@ import { driveImageUrl } from "@/app/lib/drive-image";
 import Image from "next/image";
 import ExpandableText from "@/app/components/expandable-text";
 
-type StoreView = {
+type SacredView = {
     id: string;
     name: string;
-    short?: string;
-    tel?: string;
-    open_at?: string;
-    close_at?: string;
-    off_days?: string;
+    category?: string;
+    prayers?: string;
+    worship?: string;
+    isHighlight?: string | boolean;
     thumbnail?: string;
 };
 
-type RelatedCommunity = {
+type RelatedTemple = {
     id: string;
     name: string;
 } | null;
 
-export default function StoreDetailPage() {
+export default function SacredDetailPage() {
     const { id } = useParams<{ id: string }>();
     const locale = useLocale();
     const router = useRouter();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [store, setStore] = useState<StoreView | null>(null);
-    const [community, setCommunity] = useState<RelatedCommunity>(null);
+    const [sacred, setSacred] = useState<SacredView | null>(null);
+    const [temple, setTemple] = useState<RelatedTemple>(null);
 
     const t = {
-        open: locale === "en" ? "Open" : "เปิด",
-        close: locale === "en" ? "Close" : "ปิด",
-        call: locale === "en" ? "Call" : "โทร",
         back: locale === "en" ? "Back" : "ย้อนกลับ",
-        community: locale === "en" ? "Community" : "ชุมชน",
+        temple: locale === "en" ? "Temple" : "วัด",
+        prayers: locale === "en" ? "Prayers" : "บทสวด",
+        worship: locale === "en" ? "Worship" : "วิธีบูชา",
+        highlight: locale === "en" ? "Highlight" : "ไฮไลท์",
     } as const;
 
     useEffect(() => {
@@ -50,15 +49,15 @@ export default function StoreDetailPage() {
             setLoading(true);
             setError(null);
             try {
-                const res = await fetch(`/api/stores/${id}?locale=${locale}`, {
+                const res = await fetch(`/api/sacred/${id}?locale=${locale}`, {
                     next: { revalidate: 60 },
                 });
                 const json = await res.json();
-                if (!res.ok) throw new Error(json?.error || "Failed to load store");
+                if (!res.ok) throw new Error(json?.error || "Failed to load sacred item");
                 if (!active) return;
 
-                setStore(json.store);
-                setCommunity(json.relatedCommunity);
+                setSacred(json.sacred);
+                setTemple(json.relatedTemple);
             } catch (e: any) {
                 if (active) setError(e?.message || "Unknown error");
             } finally {
@@ -85,7 +84,7 @@ export default function StoreDetailPage() {
         <MainLayout loading={loading} loadingSlot={<GridSkeleton />}>
             <div className="min-h-screen pb-24 bg-slate-50">
                 {/* Sticky Header */}
-                <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+                <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
                     <div className="flex items-center p-4 gap-3">
                         <button
                             onClick={() => router.back()}
@@ -96,17 +95,17 @@ export default function StoreDetailPage() {
                             </svg>
                         </button>
                         <h1 className="text-lg font-semibold text-slate-900 truncate flex-1">
-                            {store?.name}
+                            {sacred?.name}
                         </h1>
                     </div>
                 </header>
 
                 {/* Hero */}
                 <section className="relative w-full aspect-video bg-slate-200">
-                    {store?.thumbnail ? (
+                    {sacred?.thumbnail ? (
                         <Image
-                            src={driveImageUrl(store.thumbnail)}
-                            alt={store.name}
+                            src={driveImageUrl(sacred.thumbnail)}
+                            alt={sacred.name}
                             fill
                             className="object-cover"
                         />
@@ -123,60 +122,66 @@ export default function StoreDetailPage() {
                 <div className="p-4 space-y-4">
                     {/* Header Info */}
                     <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
-                        <h2 className="text-xl font-bold text-slate-900 mb-2">{store?.name}</h2>
-                        {store?.short && (
-                            <ExpandableText className="text-sm text-slate-600">
-                                {store.short}
-                            </ExpandableText>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                            <h2 className="text-xl font-bold text-slate-900 leading-tight">{sacred?.name}</h2>
+                            {(String(sacred?.isHighlight) === "yes" || sacred?.isHighlight === true) && (
+                                <span className="shrink-0 px-2 py-0.5 bg-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-wider rounded-full">
+                                    {t.highlight}
+                                </span>
+                            )}
+                        </div>
+                        {sacred?.category && (
+                            <p className="text-sm text-slate-500 font-medium">
+                                {sacred.category}
+                            </p>
                         )}
                     </div>
 
-                    {/* Opening Hours */}
-                    {(store?.open_at || store?.close_at) && (
+                    {/* Prayers */}
+                    {sacred?.prayers && (
                         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
                             <div className="flex items-center gap-2 mb-3">
                                 <div className="w-1 h-5 bg-amber-500 rounded-full" />
                                 <h3 className="text-base font-semibold text-slate-900">
-                                    {locale === 'en' ? 'Opening Hours' : 'เวลาทำการ'}
+                                    {t.prayers}
                                 </h3>
                             </div>
-                            <div className="flex items-center gap-4 text-sm">
-                                {store.open_at && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-slate-500">{t.open}:</span>
-                                        <span className="font-medium text-slate-900">{store.open_at}</span>
-                                    </div>
-                                )}
-                                {store.close_at && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-slate-500">{t.close}:</span>
-                                        <span className="font-medium text-slate-900">{store.close_at}</span>
-                                    </div>
-                                )}
-                            </div>
-                            {store.off_days && (
-                                <div className="mt-2 text-xs text-red-500 bg-red-50 px-3 py-1.5 rounded-lg inline-block">
-                                    {locale === 'en' ? `Closed days: ${store.off_days}` : `หยุด ${store.off_days}`}
-                                </div>
-                            )}
+                            <ExpandableText className="text-sm text-slate-700 font-serif bg-slate-50 p-3 rounded-xl">
+                                {sacred.prayers}
+                            </ExpandableText>
                         </div>
                     )}
 
-                    {/* Related Community Link */}
-                    {community && (
+                    {/* Worship */}
+                    {sacred?.worship && (
+                        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-1 h-5 bg-amber-500 rounded-full" />
+                                <h3 className="text-base font-semibold text-slate-900">
+                                    {t.worship}
+                                </h3>
+                            </div>
+                            <ExpandableText className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                                {sacred.worship}
+                            </ExpandableText>
+                        </div>
+                    )}
+
+                    {/* Related Temple Link */}
+                    {temple && (
                         <div
-                            onClick={() => router.push(`/community/${community.id}`)}
+                            onClick={() => router.push(`/temple/${temple.id}`)}
                             className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex items-center justify-between active:scale-[0.98] transition-transform cursor-pointer"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <div className="text-xs text-slate-500">{t.community}</div>
-                                    <div className="text-sm font-semibold text-slate-900">{community.name}</div>
+                                    <div className="text-xs text-slate-500">{t.temple}</div>
+                                    <div className="text-sm font-semibold text-slate-900">{temple.name}</div>
                                 </div>
                             </div>
                             <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,23 +191,6 @@ export default function StoreDetailPage() {
                     )}
                 </div>
             </div>
-
-            {/* Bottom Action Bar */}
-            {store?.tel && (
-                <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe">
-                    <div className="px-4 py-3">
-                        <a
-                            href={`tel:${store.tel}`}
-                            className="flex items-center justify-center gap-2 w-full py-3.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-semibold rounded-xl shadow-lg active:scale-[0.98] transition-all"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            {t.call} {store.tel}
-                        </a>
-                    </div>
-                </div>
-            )}
         </MainLayout>
     );
 }

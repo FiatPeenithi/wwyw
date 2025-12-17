@@ -13,6 +13,7 @@ import { getLocation } from "@/app/lib/storedLocation";
 import { parseLatLngFromGoogleMapsUrl } from "@/app/lib/googleMaps";
 import { navigationUri } from "@/app/lib/mapsNavigation";
 import DriveCarousel from "@/app/components/driveCarousel";
+import ExpandableText from "@/app/components/expandable-text";
 
 type CommunityView = {
   id: string;
@@ -165,9 +166,11 @@ export default function CommunityDetailPage() {
 
           <div className="p-4 bg-white mt-4 rounded-xl border border-slate-200">
             <h2 className="text-xl font-bold drop-shadow-lg mb-1">{community?.name}</h2>
-            <p className={`leading-relaxed text-slate-500 `}>
-              {community?.short}
-            </p>
+            {community?.short && (
+              <ExpandableText className="text-slate-500">
+                {community?.short}
+              </ExpandableText>
+            )}
           </div>
         </section>
 
@@ -182,9 +185,9 @@ export default function CommunityDetailPage() {
                   {t.history}
                 </h3>
               </div>
-              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+              <ExpandableText className="text-sm">
                 {community.history}
-              </p>
+              </ExpandableText>
             </section>
           )}
           {/* Highlight */}
@@ -196,9 +199,9 @@ export default function CommunityDetailPage() {
                   {t.highlight}
                 </h3>
               </div>
-              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+              <ExpandableText className="text-sm">
                 {community.highlight}
-              </p>
+              </ExpandableText>
             </section>
           )}
 
