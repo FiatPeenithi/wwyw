@@ -87,14 +87,6 @@ export default function StoreDetailPage() {
                 {/* Sticky Header */}
                 <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
                     <div className="flex items-center p-4 gap-3">
-                        <button
-                            onClick={() => router.back()}
-                            className="p-2 -ml-2 rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors"
-                        >
-                            <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
                         <h1 className="text-lg font-semibold text-slate-900 truncate flex-1">
                             {store?.name}
                         </h1>

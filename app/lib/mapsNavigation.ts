@@ -1,13 +1,20 @@
-// app/lib/mapsNavigation.ts
-
 export const navigationUri = (
-  lat1?: number | string,
-  lng1?: number | string,
-  lat2?: number | string,
-  lng2?: number | string
+  originVal: string | number,
+  destVal: string | number,
+  lat2?: string | number, // Optional, for backward compatibility or explicit lat/lng pairs
+  lng2?: string | number
 ): string => {
-  const origin = `${lat1},${lng1}`;
-  const destination = `${lat2},${lng2}`;
+  // Overloading-like logic:
+  // If lat2/lng2 are provided, we assume parsing (lat1, lng1, lat2, lng2)
+  // Otherwise we assume (originString, destinationString)
+
+  let origin = String(originVal);
+  let destination = String(destVal);
+
+  if (lat2 !== undefined && lng2 !== undefined) {
+    origin = `${originVal},${destVal}`;
+    destination = `${lat2},${lng2}`;
+  }
 
   const params = new URLSearchParams({
     api: "1",

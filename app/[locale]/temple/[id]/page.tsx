@@ -264,7 +264,7 @@ export default function TempleDetailPage() {
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
                 {communities.map((c) => (
 
-                  <CommunityCard key={c.id} community={c} t={t} templeMaps={temple?.maps} />
+                  <CommunityCard key={c.id} community={c} t={t} templeMaps={temple?.maps} templeName={temple?.name} />
                 ))}
               </div>
             )}
@@ -412,7 +412,7 @@ function SacredCard({
   );
 }
 
-function CommunityCard({ templeMaps, community, t }: { templeMaps?: string; community: CommunityView; t: any }) {
+function CommunityCard({ templeMaps, community, t, templeName }: { templeMaps?: string; community: CommunityView; t: any, templeName?: string }) {
   const router = useRouter();
   return (
     <div
@@ -443,43 +443,69 @@ function CommunityCard({ templeMaps, community, t }: { templeMaps?: string; comm
 
         <button
           onClick={async () => {
+            let startLat: number | string | undefined;
+            let startLng: number | string | undefined;
+            let endLat: number | string | undefined;
+            let endLng: number | string | undefined;
+
             try {
+              // 1. Try to expand URLs and parse coords
               const [tRes, cRes] = await Promise.all([
                 fetch(`/api/expand?url=${encodeURIComponent(templeMaps || "")}`),
                 fetch(`/api/expand?url=${encodeURIComponent(community.maps)}`),
               ]);
 
-              if (!tRes.ok || !cRes.ok) {
-                throw new Error("expand API failed");
+              if (tRes.ok && cRes.ok) {
+                const tJson = await tRes.json();
+                const cJson = await cRes.json();
+
+                const tempExpanded = tJson.expandedTemp ?? tJson.expanded ?? tJson.expandedUrl ?? tJson.url;
+                const commuExpanded = cJson.expanded ?? cJson.expandedTemp ?? cJson.expandedUrl ?? cJson.url;
+
+                if (tempExpanded && commuExpanded) {
+                  const tempLoc = parseLatLngFromGoogleMapsUrl(String(tempExpanded));
+                  const commuLoc = parseLatLngFromGoogleMapsUrl(String(commuExpanded));
+
+                  if (tempLoc && commuLoc) {
+                    startLat = tempLoc.lat;
+                    startLng = tempLoc.lng;
+                    endLat = commuLoc.lat;
+                    endLng = commuLoc.lng;
+                  }
+                }
               }
-
-              const tJson = await tRes.json();
-              const cJson = await cRes.json();
-
-              // รองรับหลายชื่อ field จาก API ที่อาจต่างกัน
-              const tempExpanded =
-                tJson.expandedTemp ?? tJson.expanded ?? tJson.expandedUrl ?? tJson.url;
-              const commuExpanded =
-                cJson.expanded ?? cJson.expandedTemp ?? cJson.expandedUrl ?? cJson.url;
-
-              if (!tempExpanded || !commuExpanded) {
-                throw new Error("expanded URL missing");
-              }
-
-              const tempLoc = parseLatLngFromGoogleMapsUrl(String(tempExpanded));
-              const commuLoc = parseLatLngFromGoogleMapsUrl(String(commuExpanded));
-
-              if (!tempLoc || !commuLoc) {
-                throw new Error("cannot parse lat/lng from expanded URL");
-              }
-
-              router.push(
-                navigationUri(tempLoc.lat, tempLoc.lng, commuLoc.lat, commuLoc.lng)
-              );
             } catch (err) {
-              console.error(err);
-              // จะแจ้งผู้ใช้หรือล็อกอย่างเดียวก็ได้
-              // alert("เกิดข้อผิดพลาดในการสร้างเส้นทาง");
+              console.warn("Failed to parse coordinates from maps URLs, falling back to names", err);
+            }
+
+            // 2. Fallback to names if coords are missing
+            if (!startLat || !startLng || !endLat || !endLng) {
+              startLat = templeName || "วัด"; // Fallback origin name
+              // We need a destination name.
+              // Since navigationUri handles single arguments as "search query", 
+              // we can pass names directly if we don't have coords.
+              // Ideally navigationUri should be robust enough.
+
+              // Logic: if we have names, use them.
+              // We reuse the variables. 
+              // If we are here, it means AT LEAST one pair is missing.
+              // So we might as well fallback to name-based navigation for both to be safe, 
+              // or mix-and-match if our logic allows.
+              // But simplified: just use names if coords fail.
+              startLat = templeName || "";
+              startLng = undefined; // Signal to use startLat as string
+
+              endLat = community.name || "";
+              endLng = undefined;
+            }
+
+            // 3. Navigate
+            if (startLat && endLat) {
+              router.push(navigationUri(startLat, endLat, startLng, endLng));
+            } else {
+              // Ultimate fallback if even names are empty (unlikely)
+              // Just open maps
+              window.open("https://maps.google.com");
             }
           }}
           className="flex-1 text-xs w-full mb-2 flex items-center justify-center gap-2 py-3 px-2 mt-2 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-medium rounded-lg active:scale-95 transition-all"
