@@ -44,11 +44,12 @@ export default function Home() {
       {/* Centered hero content */}
       <main className="relative z-10 flex items-center justify-center min-h-dvh">
         <div className="text-center px-6 max-w-3xl">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight drop-shadow-md">
-            {t('title')}
+          <h1 className="font-bold text-white leading-tight drop-shadow-md grid text-center justify-center items-center gap-4">
+            <span className="text-5xl sm:text-6xl lg:text-7xl">W(h)at</span>
+            <span className="text-3xl sm:text-4xl lg:text-5xl">Would You Wish ?</span>
           </h1>
 
-          <p className="mt-4 text-2xl sm:text-3xl text-white/90 drop-shadow-md">
+          <p className="mt-8 text-2xl sm:text-3xl text-white/90 drop-shadow-md">
             {t('subtitle')}
           </p>
 
