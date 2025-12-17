@@ -11,7 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import LocationCard from "@/app/components/location-card";
 import { getLocation } from "@/app/lib/storedLocation";
-import { parseLatLngFromGoogleMapsUrl } from "@/app/lib/googleMaps";
+import { parseLatLngFromGoogleMapsUrl, getQueryFromGoogleMapsUrl } from "@/app/lib/googleMaps";
 import { navigationUri } from "@/app/lib/mapsNavigation";
 import DriveCarousel from "@/app/components/driveCarousel";
 import ExpandableText from "@/app/components/expandable-text";
@@ -264,7 +264,7 @@ export default function TempleDetailPage() {
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
                 {communities.map((c) => (
 
-                  <CommunityCard key={c.id} community={c} t={t} templeMaps={temple?.maps} templeName={temple?.name} />
+                  <CommunityCard key={c.id} community={c} t={t} templeMaps={temple?.maps} />
                 ))}
               </div>
             )}
@@ -412,8 +412,10 @@ function SacredCard({
   );
 }
 
-function CommunityCard({ templeMaps, community, t, templeName }: { templeMaps?: string; community: CommunityView; t: any, templeName?: string }) {
+function CommunityCard({ templeMaps, community, t }: { templeMaps?: string; community: CommunityView; t: any }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
   return (
     <div
       className="min-w-[280px] max-w-[280px] snap-center bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200"
@@ -442,90 +444,80 @@ function CommunityCard({ templeMaps, community, t, templeName }: { templeMaps?: 
         )}
 
         <button
+          disabled={loading}
           onClick={async () => {
-            let startLat: number | string | undefined;
-            let startLng: number | string | undefined;
-            let endLat: number | string | undefined;
-            let endLng: number | string | undefined;
+            if (!templeMaps) {
+              alert("ไม่พบข้อมูลแผนที่วัด");
+              return;
+            }
+            if (!community.maps) {
+              alert("ไม่พบข้อมูลแผนที่ชุมชน");
+              return;
+            }
 
             try {
-              // 1. Try to expand URLs and parse coords
+              setLoading(true);
               const [tRes, cRes] = await Promise.all([
-                fetch(`/api/expand?url=${encodeURIComponent(templeMaps || "")}`),
+                fetch(`/api/expand?url=${encodeURIComponent(templeMaps)}`),
                 fetch(`/api/expand?url=${encodeURIComponent(community.maps)}`),
               ]);
 
-              if (tRes.ok && cRes.ok) {
-                const tJson = await tRes.json();
-                const cJson = await cRes.json();
+              if (!tRes.ok || !cRes.ok) throw new Error("expand API failed");
 
-                const tempExpanded = tJson.expandedTemp ?? tJson.expanded ?? tJson.expandedUrl ?? tJson.url;
-                const commuExpanded = cJson.expanded ?? cJson.expandedTemp ?? cJson.expandedUrl ?? cJson.url;
+              const tJson = await tRes.json();
+              const cJson = await cRes.json();
 
-                if (tempExpanded && commuExpanded) {
-                  const tempLoc = parseLatLngFromGoogleMapsUrl(String(tempExpanded));
-                  const commuLoc = parseLatLngFromGoogleMapsUrl(String(commuExpanded));
+              // Get expanded URLs
+              const tempExpanded = tJson.expandedTemp ?? tJson.expanded ?? tJson.expandedUrl ?? tJson.url;
+              const commuExpanded = cJson.expanded ?? cJson.expandedTemp ?? cJson.expandedUrl ?? cJson.url;
 
-                  if (tempLoc && commuLoc) {
-                    startLat = tempLoc.lat;
-                    startLng = tempLoc.lng;
-                    endLat = commuLoc.lat;
-                    endLng = commuLoc.lng;
-                  }
-                }
+              if (!tempExpanded || !commuExpanded) throw new Error("expanded URL missing");
+
+              const tempLoc = parseLatLngFromGoogleMapsUrl(String(tempExpanded));
+              const commuLoc = parseLatLngFromGoogleMapsUrl(String(commuExpanded));
+
+              // Fallback logic
+              const originVal = tempLoc ? `${tempLoc.lat},${tempLoc.lng}` : (getQueryFromGoogleMapsUrl(String(tempExpanded)) || templeMaps);
+              const destVal = commuLoc ? `${commuLoc.lat},${commuLoc.lng}` : (getQueryFromGoogleMapsUrl(String(commuExpanded)) || community.name);
+
+              // If we have coordinates for both, use the specific lat/lng overload (backward compatibility)
+              if (tempLoc && commuLoc) {
+                router.push(navigationUri(tempLoc.lat, tempLoc.lng, commuLoc.lat, commuLoc.lng));
+              } else {
+                // Mixed or string-based navigation
+                router.push(navigationUri(originVal!, destVal!));
               }
             } catch (err) {
-              console.warn("Failed to parse coordinates from maps URLs, falling back to names", err);
-            }
-
-            // 2. Fallback to names if coords are missing
-            if (!startLat || !startLng || !endLat || !endLng) {
-              startLat = templeName || "วัด"; // Fallback origin name
-              // We need a destination name.
-              // Since navigationUri handles single arguments as "search query", 
-              // we can pass names directly if we don't have coords.
-              // Ideally navigationUri should be robust enough.
-
-              // Logic: if we have names, use them.
-              // We reuse the variables. 
-              // If we are here, it means AT LEAST one pair is missing.
-              // So we might as well fallback to name-based navigation for both to be safe, 
-              // or mix-and-match if our logic allows.
-              // But simplified: just use names if coords fail.
-              startLat = templeName || "";
-              startLng = undefined; // Signal to use startLat as string
-
-              endLat = community.name || "";
-              endLng = undefined;
-            }
-
-            // 3. Navigate
-            if (startLat && endLat) {
-              router.push(navigationUri(startLat, endLat, startLng, endLng));
-            } else {
-              // Ultimate fallback if even names are empty (unlikely)
-              // Just open maps
-              window.open("https://maps.google.com");
+              console.error(err);
+              alert("เกิดข้อผิดพลาดในการสร้างเส้นทาง");
+            } finally {
+              setLoading(false);
             }
           }}
-          className="flex-1 text-xs w-full mb-2 flex items-center justify-center gap-2 py-3 px-2 mt-2 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-medium rounded-lg active:scale-95 transition-all"
+          className="flex-1 text-xs w-full mb-2 flex items-center justify-center gap-2 py-3 px-2 mt-2 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 disabled:bg-slate-400 text-white font-medium rounded-lg active:scale-95 transition-all"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-            />
-          </svg>
-          {t.fromTemp}
+          {loading ? (
+            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+              />
+            </svg>
+          )}
+          {loading ? "Loading..." : t.fromTemp}
         </button>
 
         <Link
           href={`/community/${community.id}`}
           className="flex-1 text-xs flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-medium rounded-lg active:scale-95 transition-all"
         >
-
           {t.view}
         </Link>
 

@@ -48,8 +48,19 @@ export function parseLatLngFromGoogleMapsUrl(urlStr: string): LatLng | null {
     }
 
     //
-    // 4) fallback — scan ทั้ง URL หากมี lat,lng ที่ดูสมเหตุผล
-    // ป้องกัน false positive ด้วยการเช็ค range
+    // 4) Pattern inside 'data' param or URL path for !3d...!4d...
+    //    Example: !3d13.7563309!4d100.5017651
+    //
+    const dataLatMatch = urlStr.match(/!3d(-?\d{1,3}(?:\.\d+)?)/);
+    const dataLngMatch = urlStr.match(/!4d(-?\d{1,3}(?:\.\d+)?)/);
+    if (dataLatMatch && dataLngMatch) {
+      const lat = Number(dataLatMatch[1]);
+      const lng = Number(dataLngMatch[1]);
+      if (isValidLatLng(lat, lng)) return { lat, lng };
+    }
+
+    //
+    // 5) fallback — scan both URL for any lat,lng pattern
     //
     const allMatches = [...urlStr.matchAll(COORD_RE)];
     for (const m of allMatches) {
@@ -59,6 +70,15 @@ export function parseLatLngFromGoogleMapsUrl(urlStr: string): LatLng | null {
     }
 
     return null;
+  } catch {
+    return null;
+  }
+}
+
+export function getQueryFromGoogleMapsUrl(urlStr: string): string | null {
+  try {
+    const url = new URL(urlStr);
+    return url.searchParams.get("q") || url.searchParams.get("query") || null;
   } catch {
     return null;
   }
