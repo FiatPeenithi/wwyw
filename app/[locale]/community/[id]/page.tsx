@@ -163,7 +163,7 @@ export default function CommunityDetailPage() {
             ) : null}
           </div>
 
-           <div className="p-4 bg-white mt-4 rounded-xl border border-slate-200">
+          <div className="p-4 bg-white mt-4 rounded-xl border border-slate-200">
             <h2 className="text-xl font-bold drop-shadow-lg mb-1">{community?.name}</h2>
             <p className={`leading-relaxed text-slate-500 `}>
               {community?.short}
@@ -245,7 +245,7 @@ export default function CommunityDetailPage() {
             ) : (
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
                 {stores.map((s) => (
-                  <StoreCard key={s.id} store={s} t={t} />
+                  <StoreCard key={s.id} store={s} t={t} onClick={() => router.push(`/store/${s.id}`)} />
                 ))}
               </div>
             )}
@@ -310,9 +310,12 @@ function QuickInfoCard({
   return content;
 }
 
-function StoreCard({ store, t }: { store: StoreView; t: any }) {
+function StoreCard({ store, t, onClick }: { store: StoreView; t: any; onClick: () => void }) {
   return (
-    <div className="min-w-[280px] max-w-[280px] snap-center bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+    <div
+      onClick={onClick}
+      className="min-w-[280px] max-w-[280px] snap-center bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 cursor-pointer active:scale-[0.98] transition-transform"
+    >
       {store.thumbnail && (
         <div className="relative w-full aspect-[4/3] bg-slate-200">
           <Image
@@ -359,6 +362,7 @@ function StoreCard({ store, t }: { store: StoreView; t: any }) {
           {store.tel ? (
             <a
               href={`tel:${store.tel}`}
+              onClick={(e) => e.stopPropagation()}
               className="flex-1 flex items-center justify-center gap-2 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-medium rounded-lg shadow-md active:scale-95 transition-all text-sm"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
